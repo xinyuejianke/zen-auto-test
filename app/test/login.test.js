@@ -2,9 +2,9 @@ import { Browser, Builder, By, until } from 'selenium-webdriver';
 import Chrome from 'selenium-webdriver/chrome.js';
 import { test } from 'vitest';
 import { loginInputPath, loginSpanPath, fillInput } from '../page-modules/login.js';
-import { getPrimaryItem, getSecondaryItem, waitForPageLoad } from '../page-modules/side-bar.js';
+import { getPrimaryItem, getSecondaryItem } from '../page-modules/side-bar.js';
 import { getTab } from '../page-modules/my-orders.js';
-import { getElement, getFilePath } from '../common/tools.js';
+import { getElement, getFilePath, waitForPageLoaded } from '../common/tools.js';
 
 const options = new Chrome.Options().addArguments([
   '--ignore-certificate-errors',
@@ -36,14 +36,14 @@ test('user login with correct username and password', async() => {
     await fillInput(driver, By.xpath(loginInputPath('用户名')), '周杰伦')
     await fillInput(driver, By.xpath(loginInputPath('密码')), '1234abcd!')
 
-    await getElement(driver, loginSpanPath('录'), 2, 2_000).then(e => e.click())
+    await getElement(driver, loginSpanPath('登录'), 2, 2_000).then(e => e.click())
     await driver.wait(until.elementLocated(By.xpath("//img[@class='el-image__inner']")), 5000)
 
     await driver.findElement(By.xpath(getPrimaryItem('我的订单'))).click()
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     await driver.findElement(By.xpath(getSecondaryItem('已买到的宝贝'))).click()
-    await driver.wait(until.elementLocated(By.xpath(waitForPageLoad('已买到的宝贝'))), 5000)
+    await waitForPageLoaded(driver)
 
     const tabs = [
       '待付款',

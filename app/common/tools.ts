@@ -48,14 +48,24 @@ async function waitForPageLoaded(
   driver: WebDriver = new Builder().forBrowser(Browser.CHROME).build(),
   maxTries: number = 3,
   timeout: number = 5_000
-): Promise<Boolean> {
-  let status
+) {
+  let status: string;
   try {
     status = await driver.executeScript('return document.readyState')
   } catch(err) {
-    throw Error (`Failed to load page due to ${err}`)
+    throw new Error (`Failed to load page due to ${err}`)
   }
-  return (status == 'complete' && maxTries > 0)? true : waitForPageLoaded(driver, maxTries - 1, timeout)
+
+  if (status !== 'complete' && maxTries > 0) {
+    await new Promise((resolve) => setTimeout(resolve, timeout));
+    return await waitForPageLoaded(driver, maxTries - 1, timeout);
+
+  } else if (status !== 'complete' && maxTries <= 0) {
+    throw new Error(`Failed to loaded page due to exceed max waiting time: ${timeout} seconds`)
+
+  } else if (status === 'complete') {
+    return true
+  }
 }
 
 export { getFilePath, getElement, waitForPageLoaded };

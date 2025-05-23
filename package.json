@@ -5,8 +5,16 @@
     "test": "vitest",
     "coverage": "vitest run --coverage"
   },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@types/selenium-webdriver": "^4.1.28",
+    "husky": "^9.1.7",
     "selenium-webdriver": "^4.32.0",
     "typescript": "^5.8.3",
     "vitest": "^3.1.4",

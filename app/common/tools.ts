@@ -44,4 +44,18 @@ async function getElement(
   }
 }
 
-export { getFilePath, getElement };
+async function waitForPageLoaded(
+  driver: WebDriver = new Builder().forBrowser(Browser.CHROME).build(),
+  maxTries: number = 3,
+  timeout: number = 5_000
+): Promise<Boolean> {
+  let status
+  try {
+    status = await driver.executeScript('return document.readyState')
+  } catch(err) {
+    throw Error (`Failed to load page due to ${err}`)
+  }
+  return (status == 'complete' && maxTries > 0)? true : waitForPageLoaded(driver, maxTries - 1, timeout)
+}
+
+export { getFilePath, getElement, waitForPageLoaded };

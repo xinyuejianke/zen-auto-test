@@ -1,10 +1,10 @@
-import { Browser, Builder, By, until } from 'selenium-webdriver';
+import { Browser, Builder, By } from 'selenium-webdriver';
 import Chrome from 'selenium-webdriver/chrome.js';
 import { test } from 'vitest';
 import { loginInputPath, loginSpanPath, fillInput } from '../page-modules/login.js';
 import { getPrimaryItem, getSecondaryItem } from '../page-modules/side-bar.js';
 import { getTab } from '../page-modules/my-orders.js';
-import { getElement, getFilePath, waitForPageLoaded } from '../common/tools.js';
+import { getElement, getFilePath, waitForPageLoaded, waitUntil } from '../common/tools.js';
 
 const options = new Chrome.Options().addArguments([
   '--ignore-certificate-errors',
@@ -37,7 +37,7 @@ test('user login with correct username and password', async() => {
     await fillInput(driver, By.xpath(loginInputPath('密码')), '1234abcd!')
 
     await getElement(driver, loginSpanPath('登录'), 2, 2_000).then(e => e.click())
-    await driver.wait(until.elementLocated(By.xpath("//img[@class='el-image__inner']")), 5000)
+    await waitUntil(driver, "//p[contains(text(), '登录成功')]/parent::div", 'notVisible')
 
     await driver.findElement(By.xpath(getPrimaryItem('我的订单'))).click()
     await new Promise(resolve => setTimeout(resolve, 2000));

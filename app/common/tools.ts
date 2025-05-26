@@ -1,6 +1,8 @@
+import { time } from 'console';
 import { readdirSync, statSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
-import { Browser, Builder, By, WebDriver, WebElementPromise} from "selenium-webdriver";
+import { Browser, Builder, By, until, WebDriver, WebElement, WebElementPromise} from "selenium-webdriver";
 
 async function getFilePath(targetFileName: string, startDir: string = process.cwd()): Promise<string | null> {
   try {
@@ -48,24 +50,48 @@ async function waitForPageLoaded(
   driver: WebDriver = new Builder().forBrowser(Browser.CHROME).build(),
   maxTries: number = 3,
   timeout: number = 5_000
-) {
+): Promise<void> {
   let status: string;
   try {
-    status = await driver.executeScript('return document.readyState')
-  } catch(err) {
-    throw new Error (`Failed to load page due to ${err}`)
+    status = await driver.executeScript("return document.readyState");
+  } catch (err) {
+    throw new Error(`Failed to load page due to ${err}`);
   }
 
-  if (status !== 'complete' && maxTries > 0) {
+  if (status !== "complete" && maxTries > 0) {
     await new Promise((resolve) => setTimeout(resolve, timeout));
-    return await waitForPageLoaded(driver, maxTries - 1, timeout);
-
-  } else if (status !== 'complete' && maxTries <= 0) {
-    throw new Error(`Failed to loaded page due to exceed max waiting time: ${timeout} seconds`)
-
-  } else if (status === 'complete') {
-    return true
+    await waitForPageLoaded(driver, maxTries - 1, timeout);
+  } else if (status !== "complete" && maxTries <= 0) {
+    throw new Error(
+      `Failed to loaded page due to exceed max waiting time: ${timeout} seconds`
+    );
   }
 }
 
-export { getFilePath, getElement, waitForPageLoaded };
+async function waitUntil(
+  driver: WebDriver = new Builder().forBrowser(Browser.CHROME).build(),
+  xpath: string,
+  condition: 'visible' | 'notVisible',
+  maxTries: number = 3,
+  timeout: number = 5_000
+) :Promise<void> {
+
+  try {
+    const targetElement = await driver.wait(until.elementLocated(By.xpath(xpath)), timeout)
+    if (condition == 'notVisible') {
+      await driver.wait(until.elementIsNotVisible(targetElement), timeout)
+    } else if (condition == 'visible') {
+      await driver.wait(until.elementIsVisible(targetElement), timeout)
+    }
+  } catch(err) {
+    if (maxTries > 0) {
+      await waitUntil(driver, xpath, condition, maxTries - 1, timeout)
+    } else {
+      throw new Error(
+        `Target element '${xpath}' not in '${condition}' status: ${err}`
+      );
+    } 
+  }
+}
+
+export { getFilePath, getElement, waitForPageLoaded, waitUntil };

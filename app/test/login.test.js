@@ -1,10 +1,10 @@
 import { Browser, Builder, By } from 'selenium-webdriver';
 import Chrome from 'selenium-webdriver/chrome.js';
 import { test } from 'vitest';
-import { loginInputPath, loginSpanPath, fillInput } from '../page-modules/login.js';
+import { loginInputPath, loginSpanPath } from '../page-modules/login.js';
 import { getPrimaryItem, getSecondaryItem } from '../page-modules/side-bar.js';
 import { getTab } from '../page-modules/my-orders.js';
-import { getElement, waitForPageLoaded, waitUntilNotVisible} from '../common/tools.js';
+import { fillInputValue, getElement, waitForPageLoaded, waitUntilNotVisible} from '../common/tools.js';
 
 const options = new Chrome.Options().addArguments([
   '--ignore-certificate-errors',
@@ -28,8 +28,8 @@ const driver = new Builder()
 test('user login with correct username and password', async() => {
   try {
     await driver.get('http://www.tcpjwtester.top')
-    await fillInput(driver, By.xpath(loginInputPath('用户名')), '周杰伦')
-    await fillInput(driver, By.xpath(loginInputPath('密码')), '1234abcd!')
+    await fillInputValue(driver, By.xpath(loginInputPath('用户名')), '\\n周杰伦\\n')
+    await fillInputValue(driver, By.xpath(loginInputPath('密码')), '1234abcd!')
     await getElement(driver, By.xpath(loginSpanPath('登录')), 2_000, 2).then(e => e.click())
 
     await waitForPageLoaded(driver)

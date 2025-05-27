@@ -33,14 +33,14 @@ async function getElement(
   maxTries: number = 3
 ): Promise<WebElement> {
   try {
-    const target = await driver.findElement(locator)
+    const target: WebElement = await driver.findElement(locator)
     return driver.wait(until.elementIsVisible(target))
   } catch {
     if (maxTries > 0) {
       await new Promise((resolve) => setTimeout(resolve, timeout));
       return getElement(driver, locator, timeout, maxTries - 1)
     } else {
-      throw new Error(`Exceed max retry, no such element with xpath: ${locator.toString()}`);
+      throw until.elementIsNotVisible(await driver.findElement(locator))
     }
   }
 }
@@ -57,13 +57,15 @@ async function waitForPageLoaded(
     throw new Error(`Failed to load page due to ${err}`);
   }
 
-  if (status !== "complete" && maxTries > 0) {
+  if (maxTries < 0 && status !== 'complete') {
+    throw new Error( `Failed to loaded page due to exceed max waiting time: ${timeout} seconds`);
+
+  } else if (maxTries > 0 && status !== 'complete') {
     await new Promise((resolve) => setTimeout(resolve, timeout));
-    await waitForPageLoaded(driver, timeout, maxTries - 1);
-  } else if (status !== "complete" && maxTries <= 0) {
-    throw new Error(
-      `Failed to loaded page due to exceed max waiting time: ${timeout} seconds`
-    );
+    return await waitForPageLoaded(driver, timeout, maxTries - 1);
+
+  } else if (status === 'complete') {
+    return
   }
 }
 
@@ -78,12 +80,27 @@ async function waitUntilNotVisible(
     if (maxTries <= 0) {
       throw new Error( `Target element '${locator.toString()}' not in invisible status`);
     } else {
-      await new Promise((r) => setTimeout(r, timeout));
       return await waitUntilNotVisible(driver, locator, timeout, maxTries - 1);
     }
   } catch {
-    //the target element is invisible
+    return //the target element is invisible
   }
 }
 
-export { getFilePath, getElement, waitForPageLoaded, waitUntilNotVisible};
+async function fillInputValue(
+  driver: WebDriver = new Builder().forBrowser(Browser.CHROME).build(),
+  locator: Locator,
+  value: string,
+  timeout: number = 5_000,
+  maxTries: number = 3
+): Promise<void> {
+  await waitForPageLoaded(driver, timeout, maxTries)
+
+  const targetInput = await getElement(driver, locator, timeout, maxTries)
+  if (await targetInput.isDisplayed()) {
+    await targetInput.clear()
+    await targetInput.sendKeys(value.replace(/\\n/g, ''))
+  }
+}
+
+export { getFilePath, getElement, waitForPageLoaded, waitUntilNotVisible, fillInputValue};

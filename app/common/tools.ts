@@ -1,8 +1,6 @@
-import { time } from 'console';
 import { readdirSync, statSync } from 'fs';
-import { tmpdir } from 'os';
 import { join } from 'path';
-import { Browser, Builder, By, until, WebDriver, WebElement, WebElementPromise} from "selenium-webdriver";
+import { Browser, Builder, By, until, WebDriver, WebElementPromise} from "selenium-webdriver";
 
 async function getFilePath(targetFileName: string, startDir: string = process.cwd()): Promise<string | null> {
   try {
@@ -82,6 +80,8 @@ async function waitUntil(
       await driver.wait(until.elementIsNotVisible(targetElement), timeout)
     } else if (condition == 'visible') {
       await driver.wait(until.elementIsVisible(targetElement), timeout)
+    } else {
+      throw new Error(`Illegal condition: ${condition}`)
     }
   } catch(err) {
     if (maxTries > 0) {

@@ -25,11 +25,6 @@ const driver = new Builder()
   .setChromeOptions(options)
   .build();
 
-test ('test getFilePath', async() => {
-  const path = await getFilePath('env.yaml')
-  console.log(path)
-}, 5_000)
-
 test('user login with correct username and password', async() => {
   try {
     await driver.get('http://www.tcpjwtester.top')

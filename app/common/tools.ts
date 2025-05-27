@@ -72,19 +72,20 @@ async function waitForPageLoaded(
 async function waitUntilNotVisible(
   driver: WebDriver = new Builder().forBrowser(Browser.CHROME).build(),
   locator: Locator,
-  timeout: number = 5_000,
+  timeout: number = 3_000,
   maxTries: number = 3
 ) :Promise<void> {
-  try {
-    await driver.wait(until.elementLocated(locator), timeout)
-    if (maxTries <= 0) {
-      throw new Error( `Target element '${locator.toString()}' not in invisible status`);
-    } else {
-      return await waitUntilNotVisible(driver, locator, timeout, maxTries - 1);
+    try {
+      const targetVisible: boolean = await driver.findElement(locator).isDisplayed()
+      if (maxTries < 0) {
+        throw new Error( `Target element '${locator.toString()}' not in invisible status`);
+      } else if (targetVisible && maxTries > 0) {
+        await new Promise((resolve) => setTimeout(resolve, timeout));
+        return await waitUntilNotVisible(driver, locator, timeout, maxTries - 1)
+      }
+    } catch {
+      return //the target element is invisible
     }
-  } catch {
-    return //the target element is invisible
-  }
 }
 
 async function fillInputValue(

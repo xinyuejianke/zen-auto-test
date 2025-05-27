@@ -1,6 +1,6 @@
 import { readdirSync, statSync } from 'fs';
 import { join } from 'path';
-import { Browser, Builder, By, until, WebDriver, WebElementPromise} from "selenium-webdriver";
+import { Browser, Builder, Locator, until, WebDriver, WebElement} from "selenium-webdriver";
 
 async function getFilePath(targetFileName: string, startDir: string = process.cwd()): Promise<string | null> {
   try {
@@ -28,26 +28,27 @@ async function getFilePath(targetFileName: string, startDir: string = process.cw
 
 async function getElement(
   driver: WebDriver = new Builder().forBrowser(Browser.CHROME).build(),
-  xpath: string,
-  maxTries: number = 3,
-  timeout: number = 5_000
-): Promise<WebElementPromise> {
+  locator: Locator,
+  timeout: number = 5_000,
+  maxTries: number = 3
+): Promise<WebElement> {
   try {
-    return await driver.findElement(By.xpath(xpath));
+    const target = await driver.findElement(locator)
+    return driver.wait(until.elementIsVisible(target))
   } catch {
     if (maxTries > 0) {
       await new Promise((resolve) => setTimeout(resolve, timeout));
-      return getElement(driver, xpath, maxTries - 1, timeout);
+      return getElement(driver, locator, timeout, maxTries - 1)
     } else {
-      throw new Error(`Exceed max retry, no such element with xpath: ${xpath}`);
+      throw new Error(`Exceed max retry, no such element with xpath: ${locator.toString()}`);
     }
   }
 }
 
 async function waitForPageLoaded(
   driver: WebDriver = new Builder().forBrowser(Browser.CHROME).build(),
-  maxTries: number = 3,
-  timeout: number = 5_000
+  timeout: number = 5_000,
+  maxTries: number = 3
 ): Promise<void> {
   let status: string;
   try {
@@ -58,7 +59,7 @@ async function waitForPageLoaded(
 
   if (status !== "complete" && maxTries > 0) {
     await new Promise((resolve) => setTimeout(resolve, timeout));
-    await waitForPageLoaded(driver, maxTries - 1, timeout);
+    await waitForPageLoaded(driver, timeout, maxTries - 1);
   } else if (status !== "complete" && maxTries <= 0) {
     throw new Error(
       `Failed to loaded page due to exceed max waiting time: ${timeout} seconds`
@@ -66,32 +67,23 @@ async function waitForPageLoaded(
   }
 }
 
-async function waitUntil(
+async function waitUntilNotVisible(
   driver: WebDriver = new Builder().forBrowser(Browser.CHROME).build(),
-  xpath: string,
-  condition: 'visible' | 'notVisible',
-  maxTries: number = 3,
-  timeout: number = 5_000
+  locator: Locator,
+  timeout: number = 5_000,
+  maxTries: number = 3
 ) :Promise<void> {
-
   try {
-    const targetElement = await driver.wait(until.elementLocated(By.xpath(xpath)), timeout)
-    if (condition == 'notVisible') {
-      await driver.wait(until.elementIsNotVisible(targetElement), timeout)
-    } else if (condition == 'visible') {
-      await driver.wait(until.elementIsVisible(targetElement), timeout)
+    await driver.wait(until.elementLocated(locator), timeout)
+    if (maxTries <= 0) {
+      throw new Error( `Target element '${locator.toString()}' not in invisible status`);
     } else {
-      throw new Error(`Illegal condition: ${condition}`)
+      await new Promise((r) => setTimeout(r, timeout));
+      return await waitUntilNotVisible(driver, locator, timeout, maxTries - 1);
     }
-  } catch(err) {
-    if (maxTries > 0) {
-      await waitUntil(driver, xpath, condition, maxTries - 1, timeout)
-    } else {
-      throw new Error(
-        `Target element '${xpath}' not in '${condition}' status: ${err}`
-      );
-    } 
+  } catch {
+    //the target element is invisible
   }
 }
 
-export { getFilePath, getElement, waitForPageLoaded, waitUntil };
+export { getFilePath, getElement, waitForPageLoaded, waitUntilNotVisible};

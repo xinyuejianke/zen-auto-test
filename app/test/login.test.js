@@ -1,4 +1,4 @@
-import { Browser, Builder, By, until } from 'selenium-webdriver';
+import { Browser, Builder, By } from 'selenium-webdriver';
 import Chrome from 'selenium-webdriver/chrome.js';
 import { test } from 'vitest';
 import { loginInputPath, loginSpanPath, fillInput } from '../page-modules/login.js';

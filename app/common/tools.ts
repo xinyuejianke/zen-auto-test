@@ -2,7 +2,10 @@ import { readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { Browser, Builder, Locator, until, WebDriver, WebElement} from "selenium-webdriver";
 
-async function getFilePath(targetFileName: string, startDir: string = process.cwd()): Promise<string | null> {
+async function getFilePath(
+  targetFileName: string, 
+  startDir: string = process.cwd()
+): Promise<string | null> {
   try {
     const files = await readdirSync(startDir);
 

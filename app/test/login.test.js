@@ -1,9 +1,9 @@
 import { Browser, Builder, By } from 'selenium-webdriver';
 import Chrome from 'selenium-webdriver/chrome.js';
-import { loginInputPath, loginSpanPath } from '../page-modules/login.js';
+import { login } from '../page-modules/login.js';
 import { getPrimaryItem, getSecondaryItem } from '../page-modules/side-bar.js';
 import { getTab } from '../page-modules/my-orders.js';
-import { fillInputValue, getElement, getFilePath, waitForPageLoaded, waitUntilNotVisible} from '../common/tools.js';
+import { getElement, getFilePath, waitForPageLoaded, waitUntilNotVisible} from '../common/tools.js';
 import { log } from 'console';
 import yaml from 'yaml'
 import { test } from 'vitest';
@@ -36,9 +36,7 @@ test('user login with correct username and password', async() => {
     await driver.get('http://www.tcpjwtester.top')
 
     log('fill in user info, then click login button')
-    await fillInputValue(driver, By.xpath(loginInputPath('用户名')), userInfo.username)
-    await fillInputValue(driver, By.xpath(loginInputPath('密码')), userInfo.password)
-    await getElement(driver, By.xpath(loginSpanPath('登录')), 2_000, 2).then(e => e.click())
+    await login(driver, userInfo)
 
     log('wait for page loaded until login success alert invisible')
     await waitForPageLoaded(driver)
